@@ -9,13 +9,21 @@ android {
         applicationId = "com.impostor.jogo"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
+    }
+    signingConfigs {
+        create("impostor") {
+            storeFile = file("impostor.jks")
+            storePassword = "impostor123"
+            keyAlias = "impostor"
+            keyPassword = "impostor123"
+        }
     }
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("impostor")
         }
     }
     compileOptions {

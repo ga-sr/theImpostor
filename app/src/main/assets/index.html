@@ -39,6 +39,9 @@ button:active{transform:scale(.97)}
 .pl .n{flex:1;font-weight:600}
 .pl .av,.av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;color:#111;flex:none}
 .x{background:none;color:var(--mut);padding:4px 8px;font-size:20px}
+.mv{background:#1d1d24;color:var(--txt);width:34px;height:34px;padding:0;font-size:15px;border-radius:10px}
+.mv:disabled{opacity:.25}
+.step.off .ctl button{opacity:.3;pointer-events:none}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{padding:10px 14px;border-radius:999px;background:#0f0f13;border:1px solid var(--line);font-weight:600;font-size:14px}
 .chip.on{background:var(--txt);color:#111;border-color:var(--txt)}
@@ -110,7 +113,7 @@ textarea{width:100%;min-height:120px;background:#0f0f13;border:1px solid var(--l
   <p class="lbl">Jogadores</p>
   <div class="box">
     <form class="row" onsubmit="addPlayer(event)">
-      <input type="text" id="pname" placeholder="Nome do jogador" maxlength="16" autocomplete="off">
+      <input type="text" id="pname" placeholder="Nome (ou deixe vazio)" maxlength="16" autocomplete="off">
       <button type="submit" style="background:var(--red);font-weight:800">+</button>
     </form>
     <div class="players" id="plist"></div>
@@ -121,7 +124,8 @@ textarea{width:100%;min-height:120px;background:#0f0f13;border:1px solid var(--l
 
   <p class="lbl">Regras</p>
   <div class="box" style="display:flex;flex-direction:column;gap:14px">
-    <div class="step"><span>Impostores</span><div class="ctl"><button onclick="chg('imps',-1)">−</button><b id="v-imps">1</b><button onclick="chg('imps',1)">+</button></div></div>
+    <div class="tog"><span>Impostores automáticos<br><small class="sub" style="font-size:12px">1 até 6 jogadores, 2 até 10, 3 acima</small></span><button class="sw" id="t-auto" onclick="tog('impsAuto')"></button></div>
+    <div class="step" id="st-imps"><span>Impostores</span><div class="ctl"><button onclick="chg('imps',-1)">−</button><b id="v-imps">1</b><button onclick="chg('imps',1)">+</button></div></div>
     <div class="step"><span>Tempo de debate</span><div class="ctl"><button onclick="chg('time',-30)">−</button><b id="v-time">3:00</b><button onclick="chg('time',30)">+</button></div></div>
     <div class="tog"><span>Impostor vê a categoria</span><button class="sw" id="t-cat" onclick="tog('showCat')"></button></div>
     <div class="tog"><span>Impostor recebe uma dica</span><button class="sw" id="t-hint" onclick="tog('hint')"></button></div>
@@ -229,7 +233,7 @@ const WORDS = {
 };
 const COLORS=["#ff2e4d","#ffd23f","#2ee6a0","#5ab0ff","#c58bff","#ff8f3d","#ff6fb5","#7ae35a","#40e0d0","#f5f5f5","#ffb347","#9aa7ff"];
 
-let S = {players:[], cats:["Comidas","Animais","Lugares","Objetos"], imps:1, time:180, showCat:true, hint:false, custom:[], score:{}};
+let S = {players:[], cats:["Comidas","Animais","Lugares","Objetos"], imps:1, impsAuto:true, time:180, showCat:true, hint:false, custom:[], score:{}};
 let R = null; // round
 let tInt=null, tLeft=0, paused=false;
 
@@ -244,23 +248,31 @@ function openM(id){$(id).classList.add("on")}
 function closeM(id){$(id).classList.remove("on")}
 
 function renderSetup(){
-  $("plist").innerHTML=S.players.map((p,i)=>`<div class="pl">${av(p)}<span class="n">${esc(p)}</span><button class="x" onclick="delPlayer(${i})">×</button></div>`).join("")||`<p class="sub" style="text-align:center;padding:8px">Nenhum jogador ainda</p>`;
-  const cats=Object.keys(WORDS).map(c=>`<button class="chip ${S.cats.includes(c)?"on":""}" onclick="togCat('${c}')">${WORDS[c].e} ${c}</button>`);
+  const L=S.players.length;
+  $("plist").innerHTML=S.players.map((p,i)=>`<div class="pl"><span class="sub" style="width:18px;text-align:right">${i+1}</span>${av(p)}<span class="n">${esc(p)}</span><button class="mv" ${i===0?"disabled":""} onclick="movePlayer(${i},-1)">▲</button><button class="mv" ${i===L-1?"disabled":""} onclick="movePlayer(${i},1)">▼</button><button class="x" onclick="delPlayer(${i})">×</button></div>`).join("")||`<p class="sub" style="text-align:center;padding:8px">Nenhum jogador ainda</p>`;
+  const all=allCats();
+  const allOn=all.every(c=>S.cats.includes(c));
+  const cats=[`<button class="chip ${allOn?"on":""}" onclick="togAll()">🎲 Todos</button>`].concat(Object.keys(WORDS).map(c=>`<button class="chip ${S.cats.includes(c)?"on":""}" onclick="togCat('${c}')">${WORDS[c].e} ${c}</button>`));
   cats.push(`<button class="chip ${S.cats.includes("Minhas")?"on":""}" onclick="togCat('Minhas')">✏️ Minhas palavras${S.custom.length?" ("+S.custom.length+")":""}</button>`);
   $("cats").innerHTML=cats.join("");
-  $("v-imps").textContent=S.imps;
+  $("v-imps").textContent=nImps();
+  $("t-auto").classList.toggle("on",S.impsAuto);
+  $("st-imps").classList.toggle("off",S.impsAuto);
   $("v-time").textContent=fmt(S.time);
   $("t-cat").classList.toggle("on",S.showCat);
   $("t-hint").classList.toggle("on",S.hint);
 }
 function addPlayer(e){
   e.preventDefault();
-  const v=$("pname").value.trim();
-  if(!v)return;
+  let v=$("pname").value.trim();
+  if(!v){let k=S.players.length+1;while(S.players.some(p=>p.toLowerCase()==="jogador "+k))k++;v="Jogador "+k}
   if(S.players.some(p=>p.toLowerCase()===v.toLowerCase())){$("err").textContent="Esse nome já está na lista.";return}
   if(S.players.length>=20){$("err").textContent="Máximo de 20 jogadores.";return}
   S.players.push(v);$("pname").value="";$("err").textContent="";save();renderSetup();$("pname").focus();
 }
+function movePlayer(i,d){const j=i+d;if(j<0||j>=S.players.length)return;[S.players[i],S.players[j]]=[S.players[j],S.players[i]];save();renderSetup()}
+function allCats(){const a=Object.keys(WORDS);if(S.custom.length)a.push("Minhas");return a}
+function togAll(){const a=allCats();S.cats=a.every(c=>S.cats.includes(c))?[]:a;save();renderSetup()}
 function delPlayer(i){S.players.splice(i,1);save();renderSetup()}
 function togCat(c){
   if(c==="Minhas"&&!S.cats.includes(c)){$("custom-txt").value=S.custom.join("\n");openM("m-custom");return}
@@ -272,18 +284,19 @@ function saveCustom(){
   closeM("m-custom");save();renderSetup();
 }
 function chg(k,d){
-  if(k==="imps")S.imps=Math.max(1,Math.min(3,S.imps+d));
+  if(k==="imps")S.imps=Math.max(1,Math.min(5,S.imps+d));
   if(k==="time")S.time=Math.max(30,Math.min(600,S.time+d));
   save();renderSetup();
 }
-function tog(k){S[k]=!S[k];save();renderSetup()}
+function tog(k){if(k==="impsAuto"&&S.impsAuto)S.imps=nImps();S[k]=!S[k];save();renderSetup()}
+function nImps(){const n=S.players.length;if(!S.impsAuto)return S.imps;return n>10?3:n>6?2:1}
 function fmt(s){return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 
 function startRound(){
   const n=S.players.length;
   if(n<3){$("err").textContent="Adicione pelo menos 3 jogadores.";show("s-setup");return}
-  if(S.imps>=n/2){$("err").textContent="Impostores demais para esse grupo.";show("s-setup");return}
+  if(nImps()>=n/2){$("err").textContent="Impostores demais para esse grupo.";show("s-setup");return}
   if(!S.cats.length){$("err").textContent="Escolha pelo menos uma categoria.";show("s-setup");return}
   $("err").textContent="";
   const pool=[];
@@ -298,8 +311,8 @@ function startRound(){
   const pick=cand[Math.floor(Math.random()*cand.length)];
   recent=[pick.w,...recent].slice(0,Math.min(30,pool.length-1));
   try{sessionStorage.setItem("imp_recent",JSON.stringify(recent))}catch(e){}
-  const imps=shuffle(S.players).slice(0,S.imps);
-  const order=shuffle(S.players);
+  const imps=shuffle(S.players).slice(0,nImps());
+  const order=S.players.slice();
   R={word:pick.w,cat:pick.c,hint:pick.h,imps,order,idx:0,out:[],sel:null};
   S.players.forEach(p=>{if(!(p in S.score))S.score[p]=0});
   showReveal();

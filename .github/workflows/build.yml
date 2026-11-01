@@ -28,7 +28,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="v1.0.${{ github.run_number }}"
+          TAG="v1.1.${{ github.run_number }}"
           gh release create "$TAG" Impostor.apk --title "Impostor $TAG" --notes "Baixe o Impostor.apk no celular e instale." --latest
       - name: Salvar APK na branch apk
         run: |
