@@ -1,0 +1,72 @@
+name: Gerar APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'keystore/**'
+      - '*.gradle.kts'
+      - 'gradle.properties'
+      - '.github/workflows/apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Conferir segredo
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "::error::Cadastre o segredo KEYSTORE_PASSWORD em Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "8.7"
+
+      - name: Compilar
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          gradle assembleRelease
+          cp app/build/outputs/apk/release/*.apk Impostor.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Impostor-apk
+          path: Impostor.apk
+
+      - name: Publicar release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          TAG="v${VERSION}-build${{ github.run_number }}"
+          gh release create "$TAG" Impostor.apk \
+            --title "Impostor ${VERSION} (build ${{ github.run_number }})" \
+            --notes "Baixe o Impostor.apk no celular e instale. O jogo se atualiza sozinho ao abrir o app." \
+            --latest
+
+      - name: Salvar APK na branch apk
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git checkout --orphan apk
+          git rm -rf --cached . > /dev/null
+          git add -f Impostor.apk
+          git commit -m "APK build ${{ github.run_number }}"
+          git push -f origin apk

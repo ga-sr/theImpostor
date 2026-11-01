@@ -1,5 +1,16 @@
+# Gradle e Android
 build/
 .gradle/
 local.properties
 .idea/
 *.iml
+.kotlin/
+captures/
+
+# APKs gerados ficam nas Releases
+*.apk
+*.aab
+
+# Sistema
+.DS_Store
+Thumbs.db
