@@ -1,7 +1,11 @@
 name: Gerar APK
 on:
   push:
+    branches: [main]
+    paths-ignore: ['apk/**']
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,7 +19,23 @@ jobs:
         with:
           gradle-version: "8.7"
       - run: gradle assembleRelease
+      - run: cp app/build/outputs/apk/release/*.apk Impostor.apk
       - uses: actions/upload-artifact@v4
         with:
           name: Impostor-apk
-          path: app/build/outputs/apk/release/*.apk
+          path: Impostor.apk
+      - name: Publicar release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v1.0.${{ github.run_number }}"
+          gh release create "$TAG" Impostor.apk --title "Impostor $TAG" --notes "Baixe o Impostor.apk no celular e instale." --latest
+      - name: Salvar APK na branch apk
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git checkout --orphan apk
+          git rm -rf --cached . >/dev/null
+          git add -f Impostor.apk
+          git commit -m "APK build ${{ github.run_number }}"
+          git push -f origin apk
