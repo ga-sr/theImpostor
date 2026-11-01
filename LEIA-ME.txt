@@ -1,0 +1,14 @@
+IMPOSTOR, app Android
+
+Opção 1, sem instalar nada (GitHub):
+1. Crie um repositório no GitHub e envie todos os arquivos desta pasta.
+2. Abra a aba Actions. O APK sai em uns 3 minutos.
+3. Baixe o "Impostor-apk", descompacte e abra o .apk no celular.
+4. Permita "instalar apps de fontes desconhecidas" quando o Android pedir.
+
+Opção 2, Android Studio:
+1. File > Open e escolha esta pasta.
+2. Espere o Gradle sincronizar.
+3. Build > Build APK(s). O arquivo fica em app/build/outputs/apk/.
+
+O jogo fica em app/src/main/assets/index.html. Para mudar palavras, edite a lista WORDS nesse arquivo.

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0d0d10">
+<title>Impostor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0d10; --card:#17171c; --line:#2a2a32; --txt:#f4f4f6; --mut:#8d8d99;
+  --red:#ff2e4d; --red2:#c8102e; --ok:#2ee6a0; --yel:#ffd23f;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif}
+body{overscroll-behavior:none;user-select:none;-webkit-user-select:none}
+.app{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding:20px 18px 28px}
+.screen{display:none;flex:1;flex-direction:column;gap:16px;animation:in .25s ease}
+.screen.on{display:flex}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+h1{font-family:'Archivo Black',sans-serif;font-size:56px;line-height:.9;margin:8px 0 0;letter-spacing:-1px}
+h1 span{color:var(--red)}
+h2{font-family:'Archivo Black',sans-serif;font-size:28px;margin:0;line-height:1.05}
+.sub{color:var(--mut);font-size:15px;margin:0}
+.lbl{font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin:6px 0 -6px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+.row{display:flex;gap:8px;align-items:center}
+input[type=text]{flex:1;min-width:0;background:#0f0f13;border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:13px 14px;font:inherit;font-size:16px;outline:none}
+input[type=text]:focus{border-color:var(--red)}
+button{font:inherit;cursor:pointer;border:0;border-radius:14px;color:var(--txt);background:#24242c;padding:12px 14px;font-weight:600}
+button:active{transform:scale(.97)}
+.btn{width:100%;padding:18px;font-size:18px;font-weight:800;background:var(--red);border-radius:16px;box-shadow:0 6px 0 var(--red2)}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--red2)}
+.btn.ghost{background:#24242c;box-shadow:0 6px 0 #111}
+.btn:disabled{opacity:.35}
+.players{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.pl{display:flex;align-items:center;gap:10px;background:#0f0f13;border-radius:12px;padding:10px 12px}
+.pl .n{flex:1;font-weight:600}
+.pl .av,.av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;color:#111;flex:none}
+.x{background:none;color:var(--mut);padding:4px 8px;font-size:20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:10px 14px;border-radius:999px;background:#0f0f13;border:1px solid var(--line);font-weight:600;font-size:14px}
+.chip.on{background:var(--txt);color:#111;border-color:var(--txt)}
+.step{display:flex;align-items:center;justify-content:space-between}
+.step .ctl{display:flex;align-items:center;gap:12px}
+.step .ctl button{width:40px;height:40px;padding:0;font-size:22px;border-radius:12px}
+.step b{min-width:46px;text-align:center;font-size:20px}
+.tog{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sw{width:52px;height:30px;border-radius:99px;background:#2e2e38;position:relative;flex:none;padding:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:var(--ok)}
+.sw.on::after{left:25px}
+.err{color:var(--red);font-size:14px;min-height:18px;margin:0;text-align:center}
+.grow{flex:1}
+/* reveal */
+.who{text-align:center;margin-top:10px}
+.who .big{font-family:'Archivo Black',sans-serif;font-size:40px;margin:6px 0}
+.card{flex:1;min-height:300px;border-radius:26px;position:relative;touch-action:none;perspective:1000px}
+.card .face{position:absolute;inset:0;border-radius:26px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;backface-visibility:hidden;transition:transform .35s ease}
+.card .front{background:repeating-linear-gradient(45deg,#1b1b22 0 14px,#16161c 14px 28px);border:2px dashed #3a3a46}
+.card .front .ic{font-size:64px}
+.card .front p{color:var(--mut);font-weight:600;margin:12px 0 0}
+.card .back{transform:rotateY(180deg);background:var(--card);border:2px solid var(--line)}
+.card.show .front{transform:rotateY(-180deg)}
+.card.show .back{transform:rotateY(0)}
+.card .back.imp{background:radial-gradient(circle at 50% 30%,#4a0d17,#1a0a0e);border-color:var(--red)}
+.word{font-family:'Archivo Black',sans-serif;font-size:42px;line-height:1;word-break:break-word}
+.imp .word{color:var(--red);font-size:38px}
+.cat{color:var(--mut);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-top:14px}
+.hint{margin-top:10px;font-size:15px;color:#ffb3bf}
+/* game */
+.timer{font-family:'Archivo Black',sans-serif;font-size:88px;text-align:center;margin:4px 0;font-variant-numeric:tabular-nums}
+.timer.low{color:var(--red);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.5}}
+.first{text-align:center;font-size:17px}
+.first b{color:var(--yel)}
+.order{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.order span{background:#0f0f13;border-radius:99px;padding:6px 12px;font-size:14px;color:var(--mut)}
+.vote{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vote button{display:flex;align-items:center;gap:10px;padding:14px 12px;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:16px}
+.vote button.sel{border-color:var(--red);background:#2a0f15}
+.vote button.out{opacity:.3;pointer-events:none;text-decoration:line-through}
+.res{text-align:center;padding:24px 16px}
+.res .emo{font-size:70px}
+.res h2{font-size:34px;margin-top:8px}
+.ok{color:var(--ok)} .bad{color:var(--red)}
+.score{display:flex;flex-direction:column;gap:6px}
+.score div{display:flex;justify-content:space-between;background:#0f0f13;padding:10px 12px;border-radius:12px}
+.how li{margin:6px 0;color:#cfcfd6}
+.top{display:flex;justify-content:space-between;align-items:center}
+.link{background:none;color:var(--mut);padding:6px 0;font-size:14px;text-decoration:underline}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:flex-end;justify-content:center;z-index:9}
+.modal.on{display:flex}
+.modal .box{width:100%;max-width:480px;border-radius:22px 22px 0 0;padding:22px 18px 28px;max-height:85vh;overflow:auto}
+textarea{width:100%;min-height:120px;background:#0f0f13;border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:12px;font:inherit;font-size:15px;resize:vertical;outline:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SETUP -->
+<section class="screen on" id="s-setup">
+  <div class="top">
+    <h1>IMPOS<span>TOR</span></h1>
+    <button class="link" onclick="openM('m-how')">Como jogar</button>
+  </div>
+  <p class="sub">Um aparelho. Todo mundo recebe a palavra. Menos um.</p>
+
+  <p class="lbl">Jogadores</p>
+  <div class="box">
+    <form class="row" onsubmit="addPlayer(event)">
+      <input type="text" id="pname" placeholder="Nome do jogador" maxlength="16" autocomplete="off">
+      <button type="submit" style="background:var(--red);font-weight:800">+</button>
+    </form>
+    <div class="players" id="plist"></div>
+  </div>
+
+  <p class="lbl">Categorias</p>
+  <div class="chips" id="cats"></div>
+
+  <p class="lbl">Regras</p>
+  <div class="box" style="display:flex;flex-direction:column;gap:14px">
+    <div class="step"><span>Impostores</span><div class="ctl"><button onclick="chg('imps',-1)">−</button><b id="v-imps">1</b><button onclick="chg('imps',1)">+</button></div></div>
+    <div class="step"><span>Tempo de debate</span><div class="ctl"><button onclick="chg('time',-30)">−</button><b id="v-time">3:00</b><button onclick="chg('time',30)">+</button></div></div>
+    <div class="tog"><span>Impostor vê a categoria</span><button class="sw" id="t-cat" onclick="tog('showCat')"></button></div>
+    <div class="tog"><span>Impostor recebe uma dica</span><button class="sw" id="t-hint" onclick="tog('hint')"></button></div>
+  </div>
+
+  <p class="err" id="err"></p>
+  <button class="btn" onclick="startRound()">Começar</button>
+</section>
+
+<!-- REVEAL -->
+<section class="screen" id="s-reveal">
+  <div class="top"><span class="sub" id="rv-count"></span><button class="link" onclick="quit()">Sair</button></div>
+  <div class="who">
+    <p class="sub">Passe o celular para</p>
+    <div class="big" id="rv-name"></div>
+  </div>
+  <div class="card" id="card">
+    <div class="face front"><div class="ic">👆</div><p>Segure para ver sua palavra</p></div>
+    <div class="face back" id="back"></div>
+  </div>
+  <button class="btn" id="rv-next" disabled onclick="nextReveal()">Vi. Passar adiante</button>
+</section>
+
+<!-- DEBATE -->
+<section class="screen" id="s-game">
+  <div class="top"><span class="sub">Rodada de debate</span><button class="link" onclick="quit()">Sair</button></div>
+  <div class="timer" id="timer">3:00</div>
+  <p class="first">Quem começa: <b id="g-first"></b></p>
+  <div class="order" id="g-order"></div>
+  <div class="box"><p class="sub" style="text-align:center">Cada um fala uma palavra ligada ao tema. Sem entregar demais. O impostor tenta se misturar.</p></div>
+  <div class="grow"></div>
+  <button class="btn ghost" id="g-pause" onclick="pauseTimer()">Pausar</button>
+  <button class="btn" onclick="goVote()">Ir para votação</button>
+</section>
+
+<!-- VOTE -->
+<section class="screen" id="s-vote">
+  <h2>Quem é o impostor?</h2>
+  <p class="sub" id="v-sub">Contem os votos e toquem no mais votado.</p>
+  <div class="vote" id="vlist"></div>
+  <div class="grow"></div>
+  <button class="btn" id="v-go" disabled onclick="eject()">Expulsar</button>
+  <button class="btn ghost" onclick="reveal(false)">Revelar tudo</button>
+</section>
+
+<!-- RESULT -->
+<section class="screen" id="s-res">
+  <div class="box res" id="res"></div>
+  <p class="lbl">Placar</p>
+  <div class="score" id="score"></div>
+  <div class="grow"></div>
+  <button class="btn" onclick="startRound()">Nova rodada</button>
+  <button class="btn ghost" onclick="quit()">Voltar ao menu</button>
+</section>
+
+</div>
+
+<!-- MODALS -->
+<div class="modal" id="m-how" onclick="if(event.target===this)closeM(this.id)">
+  <div class="box">
+    <h2>Como jogar</h2>
+    <ol class="how">
+      <li>Adicione os jogadores. Mínimo de 3.</li>
+      <li>Passe o celular. Cada um segura a carta e vê a palavra secreta.</li>
+      <li>O impostor não recebe a palavra. Ele vê "VOCÊ É O IMPOSTOR".</li>
+      <li>Em ordem, cada um diz uma palavra relacionada ao tema.</li>
+      <li>Depois do debate, todos votam em quem acham que é o impostor.</li>
+      <li>Se o impostor for expulso, ele ainda tem uma chance: acertar a palavra secreta para virar o jogo.</li>
+    </ol>
+    <p class="sub">Pontos: grupo ganha 1 ponto cada se pegar o impostor. Impostor ganha 2 se escapar ou acertar a palavra.</p>
+    <br><button class="btn" onclick="closeM('m-how')">Entendi</button>
+  </div>
+</div>
+
+<div class="modal" id="m-custom" onclick="if(event.target===this)closeM(this.id)">
+  <div class="box">
+    <h2>Minhas palavras</h2>
+    <p class="sub" style="margin:8px 0 12px">Uma palavra por linha. Use para temas da sua turma.</p>
+    <textarea id="custom-txt" placeholder="Churrasco do tio&#10;Grupo da família&#10;Viagem pra praia"></textarea>
+    <br><br><button class="btn" onclick="saveCustom()">Salvar</button>
+  </div>
+</div>
+
+<div class="modal" id="m-guess">
+  <div class="box">
+    <h2>Última chance</h2>
+    <p class="sub" style="margin:8px 0 14px" id="guess-sub"></p>
+    <button class="btn" style="background:var(--ok);box-shadow:0 6px 0 #17a372;color:#111" onclick="guess(true)">Acertou a palavra</button>
+    <br><br><button class="btn ghost" onclick="guess(false)">Errou</button>
+  </div>
+</div>
+
+<script>
+const WORDS = {
+  "Comidas":{e:"🍔",w:[["Pizza","redonda"],["Coxinha","frita"],["Feijoada","sábado"],["Brigadeiro","festa"],["Pastel","feira"],["Açaí","roxo"],["Pão de queijo","Minas"],["Sushi","arroz"],["Lasanha","camadas"],["Pipoca","cinema"],["Churrasco","fumaça"],["Hambúrguer","lanche"],["Tapioca","branca"],["Strogonoff","creme"],["Miojo","rápido"],["Acarajé","Bahia"],["Esfiha","forno"],["Sorvete","gelado"],["Cuscuz","milho"],["Batata frita","palito"]]},
+  "Animais":{e:"🐶",w:[["Cachorro","late"],["Gato","bigode"],["Capivara","rio"],["Girafa","alta"],["Tubarão","dentes"],["Pinguim","frio"],["Elefante","grande"],["Macaco","banana"],["Jacaré","pântano"],["Papagaio","fala"],["Cobra","rasteja"],["Tartaruga","lenta"],["Leão","juba"],["Coruja","noite"],["Formiga","fila"],["Vaca","fazenda"],["Polvo","braços"],["Bicho-preguiça","árvore"],["Galinha","ovo"],["Canguru","pula"]]},
+  "Lugares":{e:"📍",w:[["Praia","areia"],["Hospital","branco"],["Escola","sinal"],["Shopping","vitrine"],["Aeroporto","mala"],["Academia","suor"],["Cinema","escuro"],["Padaria","manhã"],["Igreja","silêncio"],["Estádio","grito"],["Biblioteca","livros"],["Farmácia","remédio"],["Supermercado","carrinho"],["Zoológico","jaula"],["Balada","luzes"],["Motel","quarto"],["Rodoviária","espera"],["Parque de diversões","fila"],["Delegacia","farda"],["Dentista","cadeira"]]},
+  "Profissões":{e:"👷",w:[["Médico","jaleco"],["Professor","quadro"],["Bombeiro","sirene"],["Policial","distintivo"],["Cozinheiro","avental"],["Motorista de app","corrida"],["Influencer","seguidores"],["Advogado","terno"],["Dentista","sorriso"],["Pedreiro","tijolo"],["Piloto","céu"],["Cabeleireiro","tesoura"],["Programador","tela"],["Jogador de futebol","chuteira"],["Palhaço","nariz"],["Garçom","bandeja"],["Astronauta","espaço"],["Veterinário","pets"],["Fotógrafo","clique"],["Youtuber","vídeo"]]},
+  "Objetos":{e:"📱",w:[["Celular","bateria"],["Guarda-chuva","chuva"],["Escova de dente","manhã"],["Óculos","rosto"],["Chave","porta"],["Travesseiro","sono"],["Controle remoto","sofá"],["Mochila","costas"],["Relógio","tempo"],["Fone de ouvido","música"],["Espelho","reflexo"],["Carregador","tomada"],["Vela","chama"],["Tesoura","corte"],["Garrafa","água"],["Cadeira","sentar"],["Microondas","apito"],["Ventilador","vento"],["Chinelo","pé"],["Carteira","bolso"]]},
+  "Esportes":{e:"⚽",w:[["Futebol","gol"],["Vôlei","rede"],["Basquete","cesta"],["Natação","piscina"],["Skate","rampa"],["Surfe","onda"],["Boxe","luvas"],["Tênis","raquete"],["Ciclismo","pedal"],["Xadrez","rei"],["Corrida","tênis"],["Judô","faixa"],["Handebol","quadra"],["Fórmula 1","box"],["Ginástica","colchão"],["Futevôlei","areia"],["Pingue-pongue","mesa"],["Capoeira","roda"],["Golfe","buraco"],["Escalada","corda"]]},
+  "Brasil":{e:"🇧🇷",w:[["Carnaval","fevereiro"],["Festa Junina","fogueira"],["Cristo Redentor","braços"],["Samba","batuque"],["Novela","capítulo"],["Pix","transferência"],["Havaianas","verão"],["Caipirinha","limão"],["Funk","baile"],["Copa do Mundo","seleção"],["Amazônia","verde"],["Pelourinho","colorido"],["Réveillon","branco"],["Big Brother","casa"],["Forró","sanfona"],["Guaraná","refri"],["Feira","barraca"],["Ônibus lotado","aperto"],["Churrasco de domingo","família"],["Pagode","cavaco"]]},
+  "Países":{e:"🌎",w:[["Japão","sol"],["Argentina","vizinho"],["Estados Unidos","bandeira"],["França","torre"],["Itália","bota"],["Egito","areia"],["Portugal","bacalhau"],["México","pimenta"],["Austrália","longe"],["China","muralha"],["Canadá","frio"],["Índia","especiarias"],["Grécia","ruínas"],["Alemanha","cerveja"],["Rússia","grande"],["Jamaica","praia"],["Inglaterra","chá"],["Espanha","touro"],["Coreia do Sul","pop"],["Chile","montanha"]]},
+  "Casa":{e:"🏠",w:[["Geladeira","cozinha"],["Sofá","sala"],["Chuveiro","banho"],["Cama","quarto"],["Fogão","chama"],["Varal","roupa"],["Máquina de lavar","gira"],["Janela","vidro"],["Escada","degrau"],["Tapete","chão"],["Privada","descarga"],["Garagem","carro"],["Lâmpada","luz"],["Panela","tampa"],["Armário","portas"],["Vassoura","pó"],["Quintal","grama"],["Campainha","toque"],["Cortina","pano"],["Pia","torneira"]]},
+  "Ações":{e:"🕺",w:[["Dançar","música"],["Dormir","noite"],["Nadar","água"],["Cozinhar","fogão"],["Dirigir","volante"],["Cantar","voz"],["Correr","rápido"],["Ler","páginas"],["Pescar","anzol"],["Desenhar","lápis"],["Espirrar","nariz"],["Mergulhar","fundo"],["Abraçar","braços"],["Gritar","alto"],["Fotografar","câmera"],["Rir","alegria"],["Varrer","chão"],["Viajar","mala"],["Malhar","peso"],["Fofocar","segredo"]]}
+};
+const COLORS=["#ff2e4d","#ffd23f","#2ee6a0","#5ab0ff","#c58bff","#ff8f3d","#ff6fb5","#7ae35a","#40e0d0","#f5f5f5","#ffb347","#9aa7ff"];
+
+let S = {players:[], cats:["Comidas","Animais","Lugares","Objetos"], imps:1, time:180, showCat:true, hint:false, custom:[], score:{}};
+let R = null; // round
+let tInt=null, tLeft=0, paused=false;
+
+function load(){try{const d=JSON.parse(localStorage.getItem("impostor")||"null");if(d)S=Object.assign(S,d)}catch(e){}}
+function save(){try{localStorage.setItem("impostor",JSON.stringify(S))}catch(e){}}
+const $=id=>document.getElementById(id);
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function color(name){return COLORS[S.players.indexOf(name)%COLORS.length]||COLORS[0]}
+function av(name){return `<span class="av" style="background:${color(name)}">${esc(name[0].toUpperCase())}</span>`}
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on");window.scrollTo(0,0)}
+function openM(id){$(id).classList.add("on")}
+function closeM(id){$(id).classList.remove("on")}
+
+function renderSetup(){
+  $("plist").innerHTML=S.players.map((p,i)=>`<div class="pl">${av(p)}<span class="n">${esc(p)}</span><button class="x" onclick="delPlayer(${i})">×</button></div>`).join("")||`<p class="sub" style="text-align:center;padding:8px">Nenhum jogador ainda</p>`;
+  const cats=Object.keys(WORDS).map(c=>`<button class="chip ${S.cats.includes(c)?"on":""}" onclick="togCat('${c}')">${WORDS[c].e} ${c}</button>`);
+  cats.push(`<button class="chip ${S.cats.includes("Minhas")?"on":""}" onclick="togCat('Minhas')">✏️ Minhas palavras${S.custom.length?" ("+S.custom.length+")":""}</button>`);
+  $("cats").innerHTML=cats.join("");
+  $("v-imps").textContent=S.imps;
+  $("v-time").textContent=fmt(S.time);
+  $("t-cat").classList.toggle("on",S.showCat);
+  $("t-hint").classList.toggle("on",S.hint);
+}
+function addPlayer(e){
+  e.preventDefault();
+  const v=$("pname").value.trim();
+  if(!v)return;
+  if(S.players.some(p=>p.toLowerCase()===v.toLowerCase())){$("err").textContent="Esse nome já está na lista.";return}
+  if(S.players.length>=20){$("err").textContent="Máximo de 20 jogadores.";return}
+  S.players.push(v);$("pname").value="";$("err").textContent="";save();renderSetup();$("pname").focus();
+}
+function delPlayer(i){S.players.splice(i,1);save();renderSetup()}
+function togCat(c){
+  if(c==="Minhas"&&!S.cats.includes(c)){$("custom-txt").value=S.custom.join("\n");openM("m-custom");return}
+  S.cats=S.cats.includes(c)?S.cats.filter(x=>x!==c):[...S.cats,c];save();renderSetup();
+}
+function saveCustom(){
+  S.custom=$("custom-txt").value.split("\n").map(s=>s.trim()).filter(Boolean).slice(0,200);
+  S.cats=S.cats.filter(x=>x!=="Minhas");if(S.custom.length)S.cats.push("Minhas");
+  closeM("m-custom");save();renderSetup();
+}
+function chg(k,d){
+  if(k==="imps")S.imps=Math.max(1,Math.min(3,S.imps+d));
+  if(k==="time")S.time=Math.max(30,Math.min(600,S.time+d));
+  save();renderSetup();
+}
+function tog(k){S[k]=!S[k];save();renderSetup()}
+function fmt(s){return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function startRound(){
+  const n=S.players.length;
+  if(n<3){$("err").textContent="Adicione pelo menos 3 jogadores.";show("s-setup");return}
+  if(S.imps>=n/2){$("err").textContent="Impostores demais para esse grupo.";show("s-setup");return}
+  if(!S.cats.length){$("err").textContent="Escolha pelo menos uma categoria.";show("s-setup");return}
+  $("err").textContent="";
+  const pool=[];
+  S.cats.forEach(c=>{
+    if(c==="Minhas")S.custom.forEach(w=>pool.push({c:"Minhas palavras",w,h:null}));
+    else if(WORDS[c])WORDS[c].w.forEach(([w,h])=>pool.push({c,w,h}));
+  });
+  if(!pool.length){$("err").textContent="Sem palavras nas categorias escolhidas.";show("s-setup");return}
+  // evita repetir palavras recentes
+  let recent=[];try{recent=JSON.parse(sessionStorage.getItem("imp_recent")||"[]")}catch(e){}
+  let cand=pool.filter(p=>!recent.includes(p.w));if(!cand.length)cand=pool;
+  const pick=cand[Math.floor(Math.random()*cand.length)];
+  recent=[pick.w,...recent].slice(0,Math.min(30,pool.length-1));
+  try{sessionStorage.setItem("imp_recent",JSON.stringify(recent))}catch(e){}
+  const imps=shuffle(S.players).slice(0,S.imps);
+  const order=shuffle(S.players);
+  R={word:pick.w,cat:pick.c,hint:pick.h,imps,order,idx:0,out:[],sel:null};
+  S.players.forEach(p=>{if(!(p in S.score))S.score[p]=0});
+  showReveal();
+}
+function showReveal(){
+  const p=R.order[R.idx];
+  $("rv-count").textContent=`${R.idx+1} de ${R.order.length}`;
+  $("rv-name").innerHTML=esc(p);
+  $("rv-name").style.color=color(p);
+  const isImp=R.imps.includes(p);
+  const back=$("back");
+  back.className="face back"+(isImp?" imp":"");
+  if(isImp){
+    let h=`<div style="font-size:54px">🤫</div><div class="word">VOCÊ É O<br>IMPOSTOR</div>`;
+    if(S.showCat)h+=`<div class="cat">Categoria: ${esc(R.cat)}</div>`;
+    if(S.hint&&R.hint)h+=`<div class="hint">Dica: ${esc(R.hint)}</div>`;
+    if(R.imps.length>1)h+=`<div class="hint">Há ${R.imps.length} impostores</div>`;
+    back.innerHTML=h;
+  }else{
+    back.innerHTML=`<div class="cat" style="margin:0 0 14px">A palavra é</div><div class="word">${esc(R.word)}</div><div class="cat">${esc(R.cat)}</div>`;
+  }
+  $("card").classList.remove("show");
+  $("rv-next").disabled=true;
+  $("rv-next").textContent=R.idx===R.order.length-1?"Vi. Começar debate":"Vi. Passar adiante";
+  show("s-reveal");
+}
+(function(){
+  const c=document.getElementById("card");
+  const on=e=>{e.preventDefault();c.classList.add("show");try{navigator.vibrate&&navigator.vibrate(20)}catch(x){}};
+  const off=()=>{if(c.classList.contains("show")){c.classList.remove("show");$("rv-next").disabled=false}};
+  c.addEventListener("pointerdown",on);
+  c.addEventListener("pointerup",off);c.addEventListener("pointerleave",off);c.addEventListener("pointercancel",off);
+  c.addEventListener("contextmenu",e=>e.preventDefault());
+})();
+function nextReveal(){
+  R.idx++;
+  if(R.idx<R.order.length)showReveal();else startGame();
+}
+function startGame(){
+  const alive=R.order;
+  // quem começa: evita o impostor abrir a rodada quando possível
+  const nonImp=alive.filter(p=>!R.imps.includes(p));
+  const first=nonImp[Math.floor(Math.random()*nonImp.length)];
+  const i=alive.indexOf(first);
+  const seq=[...alive.slice(i),...alive.slice(0,i)];
+  $("g-first").textContent=first;
+  $("g-order").innerHTML=seq.map((p,k)=>`<span>${k+1}. ${esc(p)}</span>`).join("");
+  tLeft=S.time;paused=false;$("g-pause").textContent="Pausar";
+  tick();clearInterval(tInt);tInt=setInterval(()=>{if(!paused){tLeft--;tick();if(tLeft<=0){clearInterval(tInt);try{navigator.vibrate&&navigator.vibrate([300,100,300])}catch(x){}}}},1000);
+  show("s-game");
+}
+function tick(){const t=$("timer");t.textContent=tLeft>0?fmt(tLeft):"Tempo!";t.classList.toggle("low",tLeft<=15)}
+function pauseTimer(){paused=!paused;$("g-pause").textContent=paused?"Continuar":"Pausar"}
+function goVote(){clearInterval(tInt);R.sel=null;renderVote();show("s-vote")}
+function renderVote(){
+  $("vlist").innerHTML=R.order.map(p=>`<button class="${R.out.includes(p)?"out":""} ${R.sel===p?"sel":""}" onclick="selVote('${encodeURIComponent(p)}')">${av(p)}<span>${esc(p)}</span></button>`).join("");
+  $("v-go").disabled=!R.sel;
+  const left=R.imps.filter(x=>!R.out.includes(x)).length;
+  $("v-sub").textContent=R.out.length?`Ainda ${left>1?"restam "+left+" impostores":"resta 1 impostor"}. Votem de novo.`:"Contem os votos e toquem no mais votado.";
+}
+function selVote(p){R.sel=decodeURIComponent(p);renderVote()}
+function eject(){
+  const p=R.sel;R.out.push(p);
+  if(R.imps.includes(p)){
+    const left=R.imps.filter(x=>!R.out.includes(x));
+    if(left.length){R.sel=null;flash(`${p} era impostor!`);renderVote();return}
+    $("guess-sub").textContent=`${R.imps.join(" e ")} ${R.imps.length>1?"foram pegos":"foi pego"}. Agora ${R.imps.length>1?"eles dizem":"ele diz"} em voz alta qual era a palavra secreta.`;
+    openM("m-guess");
+  }else{
+    reveal(false,p);
+  }
+}
+function flash(msg){$("v-sub").textContent=msg}
+function guess(hit){closeM("m-guess");reveal(!hit,null,hit)}
+function reveal(crewWin,wrongOut,impGuessed){
+  if(R.done)return;R.done=true;
+  const crew=S.players.filter(p=>!R.imps.includes(p));
+  let html="";
+  if(crewWin){
+    crew.forEach(p=>S.score[p]=(S.score[p]||0)+1);
+    html=`<div class="emo">🎉</div><h2 class="ok">O grupo venceu!</h2>`;
+  }else if(impGuessed||wrongOut){
+    R.imps.forEach(p=>S.score[p]=(S.score[p]||0)+2);
+    html=`<div class="emo">😈</div><h2 class="bad">${R.imps.length>1?"Impostores venceram":"Impostor venceu"}!</h2>`;
+    if(wrongOut)html+=`<p class="sub">${esc(wrongOut)} era inocente.</p>`;
+    if(impGuessed)html+=`<p class="sub">Pegaram, mas ${R.imps.length>1?"eles acertaram":"ele acertou"} a palavra.</p>`;
+  }else{
+    html=`<div class="emo">👀</div><h2>Revelação</h2>`;
+  }
+  html+=`<p class="lbl" style="margin-top:18px">${R.imps.length>1?"Impostores":"Impostor"}</p><h2 style="color:var(--red);margin-top:12px">${R.imps.map(esc).join(", ")}</h2>`;
+  html+=`<p class="lbl" style="margin-top:18px">Palavra secreta</p><h2 style="margin-top:12px">${esc(R.word)}</h2><p class="sub">${esc(R.cat)}</p>`;
+  $("res").innerHTML=html;
+  const sc=Object.entries(S.score).filter(([p])=>S.players.includes(p)).sort((a,b)=>b[1]-a[1]);
+  $("score").innerHTML=sc.map(([p,v])=>`<div><span class="row">${av(p)} ${esc(p)}</span><b>${v}</b></div>`).join("")+`<button class="link" onclick="resetScore()">Zerar placar</button>`;
+  save();show("s-res");
+}
+function resetScore(){S.score={};save();$("score").innerHTML=`<p class="sub">Placar zerado.</p>`}
+function quit(){clearInterval(tInt);R=null;renderSetup();show("s-setup")}
+
+load();renderSetup();
+</script>
+</body>
+</html>
