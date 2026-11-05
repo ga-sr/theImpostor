@@ -20,7 +20,15 @@ body{overscroll-behavior:none;user-select:none;-webkit-user-select:none}
 .screen.on{display:flex}
 @keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 h1{font-family:'Archivo Black',sans-serif;font-size:56px;line-height:.9;margin:8px 0 0;letter-spacing:-1px}
-h1 span{color:var(--red)}
+h1.logo{font-size:50px;letter-spacing:-.5px;white-space:nowrap;display:flex;align-items:center;margin-top:6px}
+.eye{display:inline-block;position:relative;width:.74em;height:.74em;border-radius:50%;background:#fff;margin:0 .03em;overflow:hidden;flex:none;box-shadow:inset 0 -.06em 0 rgba(0,0,0,.18)}
+.eye i{position:absolute;top:50%;left:50%;width:.4em;height:.4em;border-radius:50%;background:radial-gradient(circle at 50% 50%,#0d0d10 0 34%,var(--red) 36% 100%);transform:translate(-50%,-50%);animation:look 5s ease-in-out infinite}
+.eye i::after{content:"";position:absolute;top:18%;left:22%;width:22%;height:22%;border-radius:50%;background:#fff;opacity:.85}
+.eye::after{content:"";position:absolute;inset:0;background:var(--bg);transform:scaleY(0);transform-origin:top;animation:blink 5s infinite}
+@keyframes look{0%,18%{transform:translate(-50%,-50%)}26%,44%{transform:translate(-92%,-46%)}52%,70%{transform:translate(-8%,-46%)}78%,100%{transform:translate(-50%,-50%)}}
+@keyframes blink{0%,86%,92%,100%{transform:scaleY(0)}89%{transform:scaleY(1)}}
+.tag{display:inline-block;background:var(--red);color:#fff;font-weight:800;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;padding:5px 10px;border-radius:8px;transform:rotate(-2deg);margin-top:10px}
+@media (prefers-reduced-motion:reduce){.eye i,.eye::after{animation:none}}
 h2{font-family:'Archivo Black',sans-serif;font-size:28px;margin:0;line-height:1.05}
 .sub{color:var(--mut);font-size:15px;margin:0}
 .lbl{font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);margin:6px 0 -6px}
@@ -105,7 +113,7 @@ textarea{width:100%;min-height:120px;background:#0f0f13;border:1px solid var(--l
 <!-- SETUP -->
 <section class="screen on" id="s-setup">
   <div class="top">
-    <h1>IMPOS<span>TOR</span></h1>
+    <div><h1 class="logo" aria-label="Impostor">IMP<span class="eye"><i></i></span>ST<span class="eye"><i></i></span>R</h1><span class="tag">Quem está mentindo?</span></div>
     <button class="link" onclick="openM('m-how')">Como jogar</button>
   </div>
   <p class="sub">Um aparelho. Todo mundo recebe a palavra. Menos um.</p>
@@ -284,6 +292,8 @@ function chg(k,d){
 }
 function tog(k){if(k==="impsAuto"&&S.impsAuto)S.imps=nImps();S[k]=!S[k];save();renderSetup()}
 const SURPRISE_CHANCE=0.1;
+// Vibração: no app Android usa a ponte nativa, no navegador usa a API web.
+function buzz(p){try{if(window.AndroidHaptics){AndroidHaptics.vibrate(Array.isArray(p)?p.join(","):String(p));return}if(navigator.vibrate)navigator.vibrate(p)}catch(e){}}
 function nImps(){const n=S.players.length;if(!S.impsAuto)return S.imps;return n>10?3:n>6?2:1}
 function fmt(s){return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -338,7 +348,7 @@ function showReveal(){
 }
 (function(){
   const c=document.getElementById("card");
-  const on=e=>{e.preventDefault();c.classList.add("show");try{navigator.vibrate&&navigator.vibrate(20)}catch(x){}};
+  const on=e=>{e.preventDefault();c.classList.add("show");buzz(40)};
   const off=()=>{if(c.classList.contains("show")){c.classList.remove("show");$("rv-next").disabled=false}};
   c.addEventListener("pointerdown",on);
   c.addEventListener("pointerup",off);c.addEventListener("pointerleave",off);c.addEventListener("pointercancel",off);
@@ -359,7 +369,7 @@ function startGame(){
   $("g-first").textContent=first;
   $("g-order").innerHTML=seq.map((p,k)=>`<span>${k+1}. ${esc(p)}</span>`).join("");
   tLeft=S.time;paused=false;$("g-pause").textContent="Pausar";
-  tick();clearInterval(tInt);tInt=setInterval(()=>{if(!paused){tLeft--;tick();if(tLeft<=0){clearInterval(tInt);try{navigator.vibrate&&navigator.vibrate([300,100,300])}catch(x){}}}},1000);
+  tick();clearInterval(tInt);tInt=setInterval(()=>{if(!paused){tLeft--;tick();if(tLeft<=0){clearInterval(tInt);buzz([300,100,300])}}},1000);
   show("s-game");
 }
 function tick(){const t=$("timer");t.textContent=tLeft>0?fmt(tLeft):"Tempo!";t.classList.toggle("low",tLeft<=15)}

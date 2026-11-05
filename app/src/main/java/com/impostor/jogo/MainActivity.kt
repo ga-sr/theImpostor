@@ -2,9 +2,15 @@ package com.impostor.jogo
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.view.WindowManager
+import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import java.io.File
@@ -35,6 +41,8 @@ class MainActivity : Activity() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             webViewClient = WebViewClient()
+            // O jogo chama AndroidHaptics.vibrate("40") ou ("300,100,300").
+            addJavascriptInterface(Haptics(this@MainActivity), "AndroidHaptics")
         }
         setContentView(web)
         loadGame()
@@ -74,6 +82,39 @@ class MainActivity : Activity() {
 
     private fun readBundled(): String =
         assets.open("index.html").bufferedReader(Charsets.UTF_8).use { it.readText() }
+
+    /** Vibração nativa. O WebView do Android não implementa navigator.vibrate. */
+    private class Haptics(context: Context) {
+        private val vibrator: Vibrator? =
+            if (Build.VERSION.SDK_INT >= 31) {
+                context.getSystemService(VibratorManager::class.java)?.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+            }
+
+        @JavascriptInterface
+        fun vibrate(pattern: String) {
+            val v = vibrator ?: return
+            if (!v.hasVibrator()) return
+            val ms = pattern.split(",").mapNotNull { it.trim().toLongOrNull() }
+                .map { it.coerceIn(0, 2000) }
+            if (ms.isEmpty()) return
+            if (Build.VERSION.SDK_INT >= 26) {
+                val effect = if (ms.size == 1) {
+                    VibrationEffect.createOneShot(ms[0], VibrationEffect.DEFAULT_AMPLITUDE)
+                } else {
+                    // Padrão web: [vibra, pausa, vibra]. Android: [espera, vibra, pausa, ...].
+                    VibrationEffect.createWaveform((listOf(0L) + ms).toLongArray(), -1)
+                }
+                v.vibrate(effect)
+            } else {
+                @Suppress("DEPRECATION")
+                if (ms.size == 1) v.vibrate(ms[0])
+                else v.vibrate((listOf(0L) + ms).toLongArray(), -1)
+            }
+        }
+    }
 
     companion object {
         private const val SITE_URL = "https://ga-sr.github.io/theImpostor/"

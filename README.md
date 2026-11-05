@@ -125,5 +125,5 @@ Guarde o backup da chave. Se você perder a chave, os usuários vão precisar de
 ## Tecnologia
 
 - Jogo: um arquivo HTML, sem dependências nem build. Fontes do Google Fonts.
-- App: Kotlin, WebView, minSdk 24 (Android 7.0), targetSdk 34.
+- App: Kotlin, WebView, minSdk 24 (Android 7.0), targetSdk 34. Vibração nativa pela ponte `AndroidHaptics`.
 - CI: GitHub Actions, Gradle 8.7, Android Gradle Plugin 8.5.

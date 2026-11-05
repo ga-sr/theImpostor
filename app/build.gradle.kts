@@ -15,8 +15,8 @@ android {
         applicationId = "com.impostor.jogo"
         minSdk = 24
         targetSdk = 34
-        versionCode = 4
-        versionName = "2.0"
+        versionCode = 5
+        versionName = "2.1"
     }
 
     // O jogo fica em /web. Ele entra no APK como cópia offline.
