@@ -48,7 +48,7 @@ Para mudar a chance, altere `SURPRISE_CHANCE` em `web/index.html`.
 
 ## Conteúdo
 
-- 10 categorias com 50 palavras cada: Comidas, Animais, Lugares, Profissões, Objetos, Esportes, Brasil, Países, Casa e Ações.
+- 11 categorias com 50 palavras cada: Comidas, Animais, Lugares, Profissões, Objetos, Esportes, Brasil, Filmes, Países, Casa e Ações. Filmes usa os títulos lançados no Brasil.
 - Cada palavra tem 3 dicas. Com 2 ou 3 impostores, cada um recebe uma dica diferente.
 - Em "Minhas palavras", você adiciona palavras suas, uma por linha. Para dar dicas, use `Palavra: dica1, dica2, dica3`.
 - O jogo evita repetir as últimas 80 palavras.
