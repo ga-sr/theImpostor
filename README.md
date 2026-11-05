@@ -32,6 +32,20 @@ Jogo de festa para jogar com um celular só. Todo mundo recebe a mesma palavra s
 
 Se você desligar a opção, escolhe o número de impostores à mão.
 
+### Rodada surpresa
+
+Opcional, desligada por padrão. Com ela ligada, cada rodada tem 1 chance em 10 de todos os jogadores serem impostores. As cartas ficam iguais às de uma rodada normal, então ninguém sabe.
+
+Na votação aparece o botão "Ninguém sabe a palavra!":
+
+| Situação | Resultado |
+|---|---|
+| Rodada surpresa e o grupo aperta o botão | Todos ganham 1 ponto |
+| Rodada surpresa e o grupo expulsa alguém | Ninguém ganha ponto |
+| Rodada normal e o grupo aperta o botão | Impostores ganham 2 pontos |
+
+Para mudar a chance, altere `SURPRISE_CHANCE` em `web/index.html`.
+
 ## Conteúdo
 
 - 10 categorias com 50 palavras cada: Comidas, Animais, Lugares, Profissões, Objetos, Esportes, Brasil, Países, Casa e Ações.
